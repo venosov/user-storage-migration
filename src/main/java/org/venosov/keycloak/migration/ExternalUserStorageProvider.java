@@ -61,6 +61,7 @@ public class ExternalUserStorageProvider implements UserStorageProvider, UserLoo
             local.setEnabled(true);
             UserCredentialModel creds = new UserCredentialModel();
             creds.setType(CredentialRepresentation.PASSWORD);
+            // TODO check external password
             creds.setValue("password");
             // TODO check external role
             local.grantRole(realm.getRole("myrole"));
