@@ -3,10 +3,7 @@ package org.venosov.keycloak.migration;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
 import org.keycloak.credential.CredentialInputValidator;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.UserCredentialModel;
-import org.keycloak.models.UserModel;
+import org.keycloak.models.*;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.models.utils.UserModelDelegate;
 import org.keycloak.storage.UserStorageProvider;
@@ -14,6 +11,7 @@ import org.keycloak.storage.user.UserLookupProvider;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class ExternalUserStorageProvider implements UserStorageProvider, CredentialInputValidator, UserLookupProvider {
     protected KeycloakSession session;
@@ -78,6 +76,8 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
             local = session.userLocalStorage().addUser(realm, username);
             local.setEnabled(true);
             local.setFederationLink(model.getId());
+            // TODO check external role
+            local.grantRole(realm.getRole("myrole"));
         }
 
         return new UserModelDelegate(local);
