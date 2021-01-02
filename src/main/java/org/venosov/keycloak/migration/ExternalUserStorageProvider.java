@@ -1,19 +1,18 @@
 package org.venosov.keycloak.migration;
 
 import org.keycloak.component.ComponentModel;
-import org.keycloak.credential.CredentialInput;
-import org.keycloak.credential.CredentialInputValidator;
-import org.keycloak.models.*;
-import org.keycloak.models.credential.PasswordCredentialModel;
-import org.keycloak.models.utils.UserModelDelegate;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserCredentialModel;
+import org.keycloak.models.UserModel;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.user.UserLookupProvider;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
-public class ExternalUserStorageProvider implements UserStorageProvider, CredentialInputValidator, UserLookupProvider {
+public class ExternalUserStorageProvider implements UserStorageProvider, UserLookupProvider {
     protected KeycloakSession session;
     protected ComponentModel model;
     // map of loaded users in this transaction
@@ -27,21 +26,6 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
     @Override
     public void close() {
 
-    }
-
-    @Override
-    public boolean supportsCredentialType(String credentialType) {
-        return credentialType.equals(PasswordCredentialModel.TYPE);
-    }
-
-    @Override
-    public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
-        if (!supportsCredentialType(input.getType()) || !(input instanceof UserCredentialModel)) return false;
-        UserCredentialModel cred = (UserCredentialModel) input;
-        // TODO check external password
-        String password = "password";
-
-        return password.equals(cred.getValue());
     }
 
     @Override
@@ -75,16 +59,14 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
         if (local == null) {
             local = session.userLocalStorage().addUser(realm, username);
             local.setEnabled(true);
-            local.setFederationLink(model.getId());
+            UserCredentialModel creds = new UserCredentialModel();
+            creds.setType(CredentialRepresentation.PASSWORD);
+            creds.setValue("password");
             // TODO check external role
             local.grantRole(realm.getRole("myrole"));
+            session.userCredentialManager().updateCredential(realm, local, creds);
         }
 
-        return new UserModelDelegate(local);
-    }
-
-    @Override
-    public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
-        return credentialType.equals(PasswordCredentialModel.TYPE);
+        return local;
     }
 }
