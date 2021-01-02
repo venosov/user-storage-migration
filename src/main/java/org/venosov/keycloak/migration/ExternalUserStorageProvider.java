@@ -1,5 +1,11 @@
 package org.venosov.keycloak.migration;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -9,6 +15,8 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.user.UserLookupProvider;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +51,15 @@ public class ExternalUserStorageProvider implements UserStorageProvider, UserLoo
         UserModel adapter = loadedUsers.get(username);
 
         if (adapter == null) {
+            try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
+                try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
+                    String bodyAsString = EntityUtils.toString(response.getEntity());
+                    System.out.println("VVVV " + bodyAsString);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             // TODO check external user
             if (true) {
                 adapter = createAdapter(realm, username);
