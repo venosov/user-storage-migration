@@ -87,7 +87,7 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(json);
                 String url = jsonNode.get("url").asText();
-                System.out.println("VVVV " + url);
+                System.out.println("VVVV url: " + url + " - status code: " + response.getStatusLine().getStatusCode());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -95,16 +95,13 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
 
         // TODO check external user
         if (true) {
-            UserCredentialModel creds = new UserCredentialModel();
-            creds.setType(CredentialRepresentation.PASSWORD);
             UserModel adapter = loadedUsers.get(user.getUsername());
 
             if(adapter != null) {
                 // TODO check external role
                 adapter.grantRole(realm.getRole("myrole"));
                 // TODO check external password
-                creds.setValue(cred.getValue());
-                session.userCredentialManager().updateCredential(realm, adapter, creds);
+                session.userCredentialManager().updateCredential(realm, adapter, cred);
 
                 return true;
             }
