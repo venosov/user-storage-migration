@@ -51,17 +51,9 @@ public class ExternalUserStorageProvider implements UserStorageProvider, UserLoo
         UserModel adapter = loadedUsers.get(username);
 
         if (adapter == null) {
-            try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
-                try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
-                    String bodyAsString = EntityUtils.toString(response.getEntity());
-                    System.out.println("VVVV " + bodyAsString);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            UserModel local = session.userLocalStorage().getUserByUsername(username, realm);
 
-            // TODO check external user
-            if (true) {
+            if (local == null) {
                 adapter = createAdapter(realm, username);
                 loadedUsers.put(username, adapter);
             }
@@ -71,9 +63,19 @@ public class ExternalUserStorageProvider implements UserStorageProvider, UserLoo
     }
 
     protected UserModel createAdapter(RealmModel realm, String username) {
-        UserModel local = session.userLocalStorage().getUserByUsername(username, realm);
+        try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
+            try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
+                String bodyAsString = EntityUtils.toString(response.getEntity());
+                System.out.println("VVVV " + bodyAsString);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        if (local == null) {
+        UserModel local = null;
+
+        // TODO check external user
+        if (true) {
             local = session.userLocalStorage().addUser(realm, username);
             local.setEnabled(true);
             UserCredentialModel creds = new UserCredentialModel();
