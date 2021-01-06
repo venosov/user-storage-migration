@@ -1,5 +1,7 @@
 package org.venosov.keycloak.migration;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -81,8 +83,11 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
 
         try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
             try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
-                String bodyAsString = EntityUtils.toString(response.getEntity());
-                System.out.println("VVVV " + bodyAsString);
+                String json = EntityUtils.toString(response.getEntity());
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(json);
+                String url = jsonNode.get("url").asText();
+                System.out.println("VVVV " + url);
             }
         } catch (IOException e) {
             e.printStackTrace();
