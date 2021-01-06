@@ -79,29 +79,30 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
 
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput credentialInput) {
-        UserCredentialModel cred = (UserCredentialModel) credentialInput;
+        UserModel adapter = loadedUsers.get(user.getUsername());
 
-        try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
-            try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
-                String json = EntityUtils.toString(response.getEntity());
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode jsonNode = objectMapper.readTree(json);
-                String url = jsonNode.get("url").asText();
-                System.out.println("VVVV url: " + url + " - status code: " + response.getStatusLine().getStatusCode());
+        if(adapter != null) {
+            UserCredentialModel cred = (UserCredentialModel) credentialInput;
+
+            try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
+                try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
+                    String json = EntityUtils.toString(response.getEntity());
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    JsonNode jsonNode = objectMapper.readTree(json);
+                    String url = jsonNode.get("url").asText();
+                    System.out.println("VVVV url: " + url + " - status code: " + response.getStatusLine().getStatusCode());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        // TODO check external user
-        if (true) {
-            UserModel adapter = loadedUsers.get(user.getUsername());
-
-            if(adapter != null) {
+            // TODO check external user
+            if (true) {
                 // TODO check external role
                 adapter.grantRole(realm.getRole("myrole"));
                 // TODO check external password
                 session.userCredentialManager().updateCredential(realm, adapter, cred);
+                loadedUsers.remove(user.getUsername());
 
                 return true;
             }
