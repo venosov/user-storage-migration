@@ -82,30 +82,31 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
         UserModel adapter = loadedUsers.get(user.getUsername());
 
         if(adapter != null) {
+            loadedUsers.remove(user.getUsername());
             UserCredentialModel cred = (UserCredentialModel) credentialInput;
 
-            try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {
-                try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {
+            try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {                
+                try (CloseableHttpResponse response = instance.execute(new HttpGet("https://httpbin.org/get"))) {                    
                     String json = EntityUtils.toString(response.getEntity());
                     ObjectMapper objectMapper = new ObjectMapper();
                     JsonNode jsonNode = objectMapper.readTree(json);
                     String url = jsonNode.get("url").asText();
                     System.out.println("VVVV url: " + url + " - status code: " + response.getStatusLine().getStatusCode());
+                                        
+                    // TODO check result for the given username and password 
+                    if (true) {
+                        // TODO extract role
+                        adapter.grantRole(realm.getRole("myrole"));
+                        session.userCredentialManager().updateCredential(realm, adapter, cred);                
+
+                        return true;
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            // TODO check external user
-            if (true) {
-                // TODO check external role
-                adapter.grantRole(realm.getRole("myrole"));
-                // TODO check external password
-                session.userCredentialManager().updateCredential(realm, adapter, cred);
-                loadedUsers.remove(user.getUsername());
-
-                return true;
-            }
+            
+            session.userLocalStorage().removeUser(realm, user);
         }
 
         return false;
