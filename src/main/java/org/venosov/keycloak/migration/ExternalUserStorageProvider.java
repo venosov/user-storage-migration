@@ -103,7 +103,7 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
                     System.out.println("VVVV url: " + url + " - status code: " + response.getStatusLine().getStatusCode());
                                         
                     // TODO check result for the given username and password 
-                    if (true) {
+                    if (cred.getValue().equals("password")) {
                         // TODO extract role
                         adapter.grantRole(realm.getRole("myrole"));
                         session.userCredentialManager().updateCredential(realm, adapter, cred);
