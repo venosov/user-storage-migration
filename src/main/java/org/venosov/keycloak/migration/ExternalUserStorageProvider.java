@@ -79,7 +79,17 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
 
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput credentialInput) {
-        UserModel adapter = loadedUsers.get(user.getUsername());
+        String username = user.getUsername();
+        UserModel adapter = session.userLocalStorage().getUserByUsername(username, realm);
+
+        if(adapter == null) {
+            adapter = session.userLocalStorage().addUser(realm, username);
+            adapter.setFederationLink(model.getId());
+            adapter.setEnabled(true);
+            loadedUsers.put(username, adapter);
+        }
+
+        adapter = loadedUsers.get(user.getUsername());
 
         if(adapter != null) {
             UserCredentialModel cred = (UserCredentialModel) credentialInput;
