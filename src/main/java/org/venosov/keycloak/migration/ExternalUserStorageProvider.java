@@ -82,7 +82,6 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
         UserModel adapter = loadedUsers.get(user.getUsername());
 
         if(adapter != null) {
-            loadedUsers.remove(user.getUsername());
             UserCredentialModel cred = (UserCredentialModel) credentialInput;
 
             try(CloseableHttpClient instance = HttpClientBuilder.create().build()) {                
@@ -97,7 +96,8 @@ public class ExternalUserStorageProvider implements UserStorageProvider, Credent
                     if (true) {
                         // TODO extract role
                         adapter.grantRole(realm.getRole("myrole"));
-                        session.userCredentialManager().updateCredential(realm, adapter, cred);                
+                        session.userCredentialManager().updateCredential(realm, adapter, cred);
+                        loadedUsers.remove(user.getUsername());
 
                         return true;
                     }
